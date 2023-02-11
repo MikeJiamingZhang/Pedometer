@@ -1,48 +1,41 @@
 package com.example.pedometer;
 
+import android.annotation.SuppressLint;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
-
-import com.google.android.material.snackbar.Snackbar;
-
+import android.content.Context;
 import androidx.appcompat.app.AppCompatActivity;
-
-import android.view.View;
-
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
-import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
-
-import com.example.pedometer.databinding.ActivityMainBinding;
-
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    private AppBarConfiguration appBarConfiguration;
-    private ActivityMainBinding binding;
-
+    private boolean hasSensor = false;
+    private TextView txt;
+    private Sensor gSensor;
+    private Sensor stepDetector;
+    private SensorManager sensorManager;
+    private int step = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        gSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        stepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
+        if(stepDetector != null){
+            txt.setText("No Fucking Sensor");
+        } else {
+            hasSensor = true;
+            sensorManager.registerListener(this, stepDetector, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+        //sensorManager.registerListener(this, gSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        txt = (TextView) findViewById(R.id.G);
 
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
-
-        setSupportActionBar(binding.toolbar);
-
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
-        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-
-        binding.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
     }
 
     @Override
@@ -67,10 +60,19 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+
+    @SuppressLint("DefaultLocale")
     @Override
-    public boolean onSupportNavigateUp() {
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        return NavigationUI.navigateUp(navController, appBarConfiguration)
-                || super.onSupportNavigateUp();
+    public void onSensorChanged(SensorEvent sensorEvent) {
+        if (sensorEvent.sensor == null){return;}
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_STEP_DETECTOR){
+            step++;
+            txt.setText(step);
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
+
     }
 }
